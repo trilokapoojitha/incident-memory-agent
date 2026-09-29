@@ -1,10 +1,3 @@
-Great 👍 The README is clean now.
-
-### STEP 4I — Paste the correct README
-
-Paste **only this** into `README.md`:
-
-```markdown
 # 🧠 Incident Memory Agent
 
 AI-powered production incident diagnosis using persistent memory with Hindsight.
