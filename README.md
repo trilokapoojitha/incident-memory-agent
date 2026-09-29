@@ -1,16 +1,8 @@
-Perfect. 👍 We'll make the README **professional but human**, not like generic AI-generated documentation.
+Great 👍 The README is clean now.
 
-## STEP 4A — Open `README.md`
+### STEP 4I — Paste the correct README
 
-In VS Code:
-
-1. Look at the **Explorer** on the left.
-2. Click **`README.md`**.
-3. You will probably see the default GitHub README content.
-4. Press **Ctrl + A** inside the README editor.
-5. Delete everything.
-
-### Then paste this:
+Paste **only this** into `README.md`:
 
 ```markdown
 # 🧠 Incident Memory Agent
@@ -23,13 +15,13 @@ When a production incident happens, engineers often ask:
 
 > "Have we seen this problem before?"
 
-The answer may already exist somewhere in old incident reports, debugging notes, or previous resolutions. But finding that knowledge quickly is difficult.
+The answer may already exist in old incident reports, debugging notes, or previous resolutions. But finding that knowledge quickly can be difficult.
 
 A normal AI assistant can suggest a solution, but it does not automatically have access to an organization's history of resolved incidents.
 
 ## 💡 The Idea
 
-**Incident Memory Agent** gives an AI agent persistent memory of previous production incidents.
+Incident Memory Agent gives an AI agent persistent memory of previous production incidents.
 
 Instead of starting from zero every time, the system can:
 
@@ -44,160 +36,122 @@ The goal is simple:
 
 **Turn past incident experience into reusable organizational memory.**
 
-## 🏗️ How It Works
+## 🏗️ Architecture
 
 ```text
-                    ┌─────────────────────┐
-                    │   Streamlit UI      │
-                    │  Engineer Interface  │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    ┌─────────────────────┐
-                    │     FastAPI         │
-                    │    Backend API      │
-                    └──────────┬──────────┘
-                               │
-                    ┌──────────▼──────────┐
-                    │      Hindsight      │
-                    │   Incident Memory   │
-                    └──────────┬──────────┘
-                               │
-                 ┌─────────────┴─────────────┐
-                 ▼                           ▼
-          Recall past incidents       Reflect on evidence
-                 │                           │
-                 └─────────────┬─────────────┘
-                               ▼
-                    ┌─────────────────────┐
-                    │   AI Diagnosis      │
-                    │ + Recommended Fix   │
-                    └──────────┬──────────┘
-                               │
-                               ▼
-                    Engineer Feedback
-                               │
-                               ▼
-                         New Memory
+Engineer
+   │
+   ▼
+Streamlit UI
+   │
+   ▼
+FastAPI Backend
+   │
+   ▼
+Hindsight Memory
+   │
+   ├── Recall relevant incidents
+   │
+   └── Reflect on historical evidence
+   │
+   ▼
+AI Diagnosis
+   │
+   ▼
+Recommended Action
+   │
+   ▼
+Engineer Feedback
+   │
+   ▼
+New Incident Memory
 ```
 
-## 🔄 Two Main Workflows
+## 🔄 How It Works
 
-### 1. Diagnose an Incident
+### 1. Retain
 
-An engineer enters a new incident such as:
+When an engineer resolves an incident, the incident details are stored in Hindsight.
+
+Each incident contains:
+
+- Symptoms
+- Root cause
+- Resolution
+
+### 2. Recall
+
+When a new incident arrives, the system searches its historical memory for relevant incidents.
+
+### 3. Diagnose
+
+If relevant historical evidence exists, the system uses it to suggest a likely diagnosis and previously successful resolution.
+
+### 4. New Incident Detection
+
+If no sufficiently relevant historical incident is found, the system does not treat unrelated incidents as evidence.
+
+Instead, it identifies the situation as a **new incident pattern** and recommends investigation using application logs, metrics, and recent changes.
+
+### 5. Engineer Feedback
+
+Engineers can provide feedback on whether a diagnosis was useful. This feedback is stored as additional memory.
+
+## 🧪 Example
+
+### Known Incident
+
+A new incident reports:
 
 ```text
-API response times are spiking and we're seeing
-timeouts talking to Redis.
+API response times are spiking and we're seeing timeouts talking to Redis.
 ```
 
-The system searches its incident memory for relevant historical evidence.
+The system can recall a previous Redis cache-related incident and use its stored resolution as evidence.
 
-If a similar incident exists, the system can surface the previous incident and its successful resolution.
+The diagnosis can recommend the previously successful fix, such as adding jitter to cache expiration.
 
-For example:
+### New Incident
 
-```text
-Past incident:
-Redis cache stampede
-
-Previous resolution:
-Add jitter to cache expiration
-```
-
-The diagnosis can then use that historical experience instead of providing only a generic response.
-
-### 2. Handle a New Incident
-
-The system should not assume that every incident matches something in memory.
-
-For example:
+A completely different incident such as:
 
 ```text
 Users are randomly getting logged out of the application.
 ```
 
-If there is no sufficiently relevant historical evidence, the system identifies it as a new incident pattern and recommends investigation instead of presenting unrelated incidents as evidence.
+If there is no sufficiently relevant historical evidence, the system reports that no similar incident was found instead of presenting unrelated incidents as evidence.
 
-This distinction is important:
-
-**No evidence is better than misleading evidence.**
-
-## 🧠 Hindsight Integration
-
-Hindsight provides the persistent memory layer.
-
-When an incident is resolved, the system stores information such as:
-
-- Incident title
-- Symptoms
-- Root cause
-- Resolution
-
-A simplified retention operation looks like:
-
-```python
-await client.aretain(
-    bank_id=BANK_ID,
-    content=content,
-    context="incident-log",
-    retain_async=False,
-)
-```
-
-When a new incident arrives, the system recalls relevant memories:
-
-```python
-matches = await client.arecall(
-    bank_id=BANK_ID,
-    query=query.description
-)
-```
-
-The system can then use the recalled information as historical evidence for diagnosis.
-
-Learn more about Hindsight:
-
-- [Hindsight GitHub](https://github.com/vectorize-io/hindsight)
-- [Hindsight Documentation](https://hindsight.vectorize.io/)
-- [What is Agent Memory?](https://vectorize.io/what-is-agent-memory)
+This distinction is important because an incident memory system should know when it **doesn't have relevant experience**.
 
 ## ✨ Key Features
 
-### Persistent Incident Memory
-Resolved incidents can be stored and reused later.
-
-### Evidence-Based Diagnosis
-The system can show historical incidents that support its diagnosis.
-
-### New Incident Detection
-If sufficiently relevant historical evidence is unavailable, the system treats the problem as a new incident pattern.
-
-### Teach the Agent
-Engineers can add a resolved incident to the system's memory.
-
-### Engineer Feedback
-Engineers can indicate whether a diagnosis was useful, allowing feedback to become part of the incident memory.
-
-### Incident History
-Previously entered incidents can be viewed through the dashboard.
+- Persistent incident memory
+- Historical incident recall
+- Evidence-based diagnosis
+- New incident detection
+- Engineer feedback
+- Teach-the-agent workflow
+- Incident history
+- Streamlit dashboard
+- FastAPI backend
+- Hindsight integration
 
 ## 🛠️ Technology Stack
 
-- **Python**
-- **FastAPI** — backend API
-- **Streamlit** — dashboard interface
-- **Hindsight** — persistent agent memory
-- **Uvicorn** — FastAPI server
-- **Pydantic** — request validation
+- Python
+- FastAPI
+- Streamlit
+- Hindsight
+- Pydantic
+- Requests
+- Python-dotenv
 
-## 🚀 Running the Project Locally
+## 🚀 Running the Project
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/trilokapoojitha/incident-memory-agent.git
+git clone <YOUR_GITHUB_REPOSITORY_URL>
 cd incident-memory-agent
 ```
 
@@ -223,14 +177,12 @@ pip install -r requirements.txt
 
 Create a `.env` file:
 
-```text
+```env
 HINDSIGHT_BASE_URL=https://api.hindsight.vectorize.io
 HINDSIGHT_API_KEY=your_hindsight_api_key_here
 ```
 
-Replace the placeholder with your own Hindsight API key.
-
-**Never commit `.env` to GitHub.**
+Never commit the real `.env` file or API key.
 
 ### 5. Start the FastAPI backend
 
@@ -250,7 +202,7 @@ Swagger documentation:
 http://localhost:8000/docs
 ```
 
-### 6. Start the Streamlit dashboard
+### 6. Start the Streamlit interface
 
 Open another terminal and run:
 
@@ -258,108 +210,53 @@ Open another terminal and run:
 streamlit run app.py
 ```
 
-## 🧪 Example Demo
-
-A simple demo flow is:
-
-### Before memory
-
-Give the system a production incident without relevant historical evidence.
-
-The system should avoid pretending that an unrelated incident is a match.
-
-### With memory
-
-Store a resolved Redis incident:
-
-```text
-Title:
-Redis cache stampede
-
-Symptoms:
-API latency increased and Redis requests started timing out.
-
-Root cause:
-A large number of cache entries expired simultaneously.
-
-Resolution:
-Added jitter to cache expiration times.
-```
-
-Then diagnose:
-
-```text
-API response times are spiking and we're seeing
-timeouts talking to Redis.
-```
-
-The system can recall the previous incident and surface the earlier resolution.
-
 ## 🔐 Security
 
-The Hindsight API key is stored locally in `.env`.
+The Hindsight API key is stored in `.env` and excluded from Git using `.gitignore`.
 
-The repository intentionally contains only:
+Only `.env.example` is included in the repository.
 
-```text
-.env.example
-```
+Never publish your real API key.
 
-The real `.env` file is excluded using `.gitignore`.
+## 🧠 Why Hindsight?
 
-**Never publish your real API key.**
+The important part of this project is not simply generating another AI response.
 
-## 📁 Project Structure
+The system gives the agent access to persistent incident experience.
 
-```text
-incident-memory-agent/
-│
-├── app.py              # Streamlit dashboard
-├── main.py             # FastAPI backend
-├── seed_data.py        # Example incident data
-├── requirements.txt    # Python dependencies
-├── .env.example        # Environment variable template
-├── .gitignore          # Files excluded from Git
-└── README.md           # Project documentation
-```
+Instead of asking:
 
-## 🎯 What I Learned
+> "What might fix this?"
 
-The interesting part of this project was not simply generating an AI response.
+the workflow becomes:
 
-The bigger challenge was deciding **when the system actually had enough historical evidence to make a useful connection**.
+> "Have we experienced something similar, what happened, and what worked?"
 
-An early version could return unrelated historical incidents for a completely different problem. That made the response look intelligent, but the evidence was misleading.
-
-Adding a relevance check changed the behavior:
-
-```text
-Relevant memory found
-        ↓
-Use historical evidence
-        ↓
-Suggest diagnosis
-```
-
-versus:
-
-```text
-No relevant memory
-        ↓
-Treat as a new incident
-        ↓
-Ask an engineer to investigate
-```
-
-That distinction made the system more trustworthy.
+That makes previous engineering experience reusable.
 
 ## 🔮 Future Improvements
 
-Possible next improvements include:
+Possible future improvements include:
 
 - Stronger semantic relevance filtering
 - Incident metadata and categorization
+- Integration with monitoring and alerting systems
 - Authentication and role-based access
-- Integration with monitoring and incident-management tools
+- Automated incident ingestion
 - Larger evaluation datasets
-- Measuring whether historical memory actually reduces incident diagnosis time
+- Measuring whether incident memory reduces diagnosis time
+
+## 📚 Hindsight
+
+Hindsight is the memory layer used by this project.
+
+- GitHub: https://github.com/vectorize-io/hindsight
+- Documentation: https://hindsight.vectorize.io/
+- Vectorize Agent Memory: https://vectorize.io/what-is-agent-memory
+
+## 👩‍💻 Project
+
+**Incident Memory Agent**
+
+Built to explore how persistent memory can make AI-assisted incident response more useful by reusing previous engineering experience.
+```
