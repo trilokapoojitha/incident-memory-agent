@@ -144,7 +144,7 @@ This distinction is important because an incident memory system should know when
 ### 1. Clone the repository
 
 ```bash
-git clone <YOUR_GITHUB_REPOSITORY_URL>
+git clone <https://github.com/trilokapoojitha/incident-memory-agent.git>
 cd incident-memory-agent
 ```
 
